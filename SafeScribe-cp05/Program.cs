@@ -60,14 +60,29 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     {
         options.TokenValidationParameters = new TokenValidationParameters
         {
+            // Define que o emissor ('iss') do token deve ser checado.
             ValidateIssuer = true,
+
+            // Define que a audiência ('aud') do token deve ser checada.
             ValidateAudience = true,
+
+            // Garante que o token não está expirado ('exp') e é válido no tempo atual.
             ValidateLifetime = true,
+
+            // Regra crítica: Garante que a assinatura do token é válida.
+            // Isso evita adulteração do token.
             ValidateIssuerSigningKey = true,
 
-            // Usando as chaves diretamente do Configuration
+            // --- Configurações dos Valores ---
+
+            // O valor exato esperado para o emissor (lido do appsettings).
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
+
+            // O valor exato esperado para a audiência (lido do appsettings).
             ValidAudience = builder.Configuration["Jwt:Audience"],
+
+            // A Chave Secreta usada para verificar a assinatura digital do token.
+            // A chave é lida da config e convertida em bytes.
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
         };
     });
