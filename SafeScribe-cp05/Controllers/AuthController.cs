@@ -13,10 +13,11 @@ namespace SafeScribe_cp05.Controllers
     public class AuthController : ControllerBase
     {
         private readonly ITokenService _tokenService;
-
-        public AuthController(ITokenService tokenService)
+        private readonly ITokenBlacklistService _blacklistService;
+        public AuthController(ITokenService tokenService, ITokenBlacklistService blacklistService)
         {
             _tokenService = tokenService;
+            _blacklistService = blacklistService;
         }
 
         // ----------------------------------------------------------------------
@@ -73,6 +74,29 @@ namespace SafeScribe_cp05.Controllers
             }
 
             return Ok(new { Token = token });
+        }
+        // ----------------------------------------------------------------------
+        // NOVO ENDPOINT: LOGOUT (POST /api/v1/auth/logout)
+        // ----------------------------------------------------------------------
+        [HttpPost("logout")]
+        [Authorize] // Requer que o usuário esteja logado com um token válido
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> Logout()
+        {
+            // O JTI (ID do JWT) é o identificador único que está no token.
+            // Ele é usado para invalidar o token atual.
+            var jti = User.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Jti)?.Value;
+
+            if (string.IsNullOrEmpty(jti))
+            {
+                // Isso só deve acontecer se o token for mal formado, mas é uma verificação de segurança.
+                return BadRequest(new { Message = "Token mal formado ou JTI ausente." });
+            }
+
+            await _blacklistService.AddToBlacklistAsync(jti);
+
+            return Ok(new { Message = "Logout bem-sucedido. O token foi invalidado." });
         }
 
         // ----------------------------------------------------------------------

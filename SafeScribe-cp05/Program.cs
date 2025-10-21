@@ -3,7 +3,8 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using SafeScribe_cp05.Services;
 using SafeScribe_cp05.Interface;
-using Microsoft.OpenApi.Models; // Necessário para a configuração do Swagger/JWT
+using Microsoft.OpenApi.Models;
+using SafeScribe_cp05.Middleware; // Necessário para a configuração do Swagger/JWT
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -53,6 +54,7 @@ builder.Services.AddSwaggerGen(c =>
 // 2. REGISTRO DE SERVIÇOS
 builder.Services.AddSingleton<ITokenService, TokenService>();
 builder.Services.AddSingleton<INoteService, NoteService>();
+builder.Services.AddSingleton<ITokenBlacklistService, InMemoryTokenBlacklistService>();
 
 // 3. CONFIGURAÇÃO DA AUTENTICAÇÃO JWT
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -87,7 +89,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 builder.Services.AddAuthorization(); // Adiciona o serviço de autorização
-
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -103,6 +104,7 @@ app.UseHttpsRedirection();
 // Authentication DEVE vir antes de Authorization!
 
 app.UseAuthentication(); // <-- ESSENCIAL! Adiciona a lógica de validação do token
+app.UseMiddleware<JwtBlacklistMiddleware>();
 
 app.UseAuthorization();  // Adiciona a lógica de verificação de permissão ([Authorize])
 
