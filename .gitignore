@@ -1,0 +1,14 @@
+# Ignorar pastas de build e cache do .NET
+[Bb]in/
+[Oo]bj/
+
+# Ignorar a pasta de cache do Visual Studio (Geralmente a principal causadora de "Permission denied")
+.vs/
+
+# Ignorar arquivos de usuário do Visual Studio
+*.suo
+*.user
+*.config.orig
+
+# Ignorar o arquivo de cache do NuGet
+.nuget/
